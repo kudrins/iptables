@@ -1,0 +1,67 @@
+---
+- hosts: localhost
+  vars_files: vars.yml
+  become: false
+  gather_facts: false
+  tasks:
+    - include_tasks: routers.yml
+    - include_tasks: central-server.yml
+
+- name: configure inet-router
+  hosts: inet-router
+  become: true 
+  gather_facts: false
+  tasks:
+  - name: copy iptables.sh
+    copy:
+      src: iptables.sh
+      dest: /root/iptables.sh
+  - name: set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+  - name: configure iner-router
+    shell: "{{item}}"
+    with_items:
+      - systemctl stop firewalld
+      - systemctl disable firewalld
+      - chmod 755 /root/iptables.sh
+      - /root/iptables.sh
+      - echo "@reboot /root/iptables.sh" | crontab -u root -
+
+- name: configure inet-router2
+  hosts: inet-router2
+  become: true 
+  gather_facts: false
+  tasks:
+  - name: copy iptables.sh
+    copy:
+      src: iptables2.sh
+      dest: /root/iptables.sh
+  - name: set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+  - name: configure iner-router
+    shell: "{{item}}"
+    with_items:
+      - systemctl stop firewalld
+      - systemctl disable firewalld
+      - chmod 755 /root/iptables.sh
+      - /root/iptables.sh
+      - echo "@reboot /root/iptables.sh" | crontab -u root -
+
+- name: configure central-server
+  hosts: central-server
+  become: true 
+  gather_facts: false
+  tasks:
+  - name: configure central-server
+    shell: "{{item}}"
+    with_items:
+      - echo "@reboot /root/iptables.sh" | crontab -u root -
+      - yum -y install nginx
+      - systemctl start nginx
+      - systemctl enable nginx

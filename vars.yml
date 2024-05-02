@@ -1,0 +1,20 @@
+---
+vcenter_hostname: 10.100.10.1
+vcenter_username: administrator@vsphere.local
+vcenter_password: password
+
+vm_username: root
+vm_password: password
+
+routers:
+  - {name: inet-router,  hostname: inet-router,  ip: 10.100.11.121, ip2: 192.168.50.10 }
+  - {name: inet-router2, hostname: inet-router2, ip: 10.100.11.122, ip2: 192.168.50.20 }
+
+commands:
+  - { command: /usr/bin/systemctl, parametr: 'stop firewalld' }
+  - { command: /usr/bin/systemctl, parametr: 'disable firewalld' }
+  - { command: /usr/sbin/setenforce, parametr: 0 }
+  - { command: /usr/bin/sed, parametr: "-i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config" } 
+  - { command: /usr/bin/chmod, parametr: '755 /root/iptables.sh' }
+  - { command: /usr/bin/bash, parametr: /root/iptables.sh }
+  

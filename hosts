@@ -1,0 +1,8 @@
+[all:vars]
+ansible_user=root
+ansible_ssh_pass=password
+
+[router]
+inet-router ansible_host=10.100.11.121
+inet-router2 ansible_host=10.100.11.122
+central-server ansible_port=2022 ansible_host=10.100.11.122

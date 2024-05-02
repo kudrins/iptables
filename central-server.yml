@@ -1,0 +1,56 @@
+---
+  - name: deploy central-server
+    community.vmware.vmware_guest:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: False
+      datacenter: Datacenter
+      datastore: datastore_6TB
+      folder: otus_network
+      template: "t_centos8"
+      name: "central-server"
+      networks:
+        - name: VMs11
+          ip:      192.168.50.30
+          netmask: 255.255.255.0
+          gateway: 192.168.50.10
+      customization:
+        hostname: central-server
+        dns_servers: [8.8.8.8]
+      state: powered-on
+      wait_for_ip_address: true
+    delegate_to: localhost
+
+  - name: copy iptables.sh to vm
+    community.vmware.vmware_guest_file_operation:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: Datacenter
+      validate_certs: False
+      folder: otus_network
+      vm_id: central-server
+      vm_username: "{{ vm_username }}"
+      vm_password: "{{ vm_password }}"
+      copy:
+        src: "/home/sergey/otus/iptables/iptables3.sh"
+        dest: "/root/iptables.sh"
+    delegate_to: localhost
+
+  - name: configure iptables
+    community.vmware.vmware_vm_shell:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: Datacenter
+      validate_certs: False
+      folder: otus_network
+      vm_id: central-server
+      vm_username: "{{ vm_username }}"
+      vm_password: "{{ vm_password }}"
+      vm_shell: "{{item.command}}" 
+      vm_shell_args: "{{item.parametr}}" 
+    with_items: "{{commands}}"
+    delegate_to: localhost
+
